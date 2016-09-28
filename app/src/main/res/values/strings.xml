@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Radio Gorod</string>
+    <string name="app_name_long">Radio Gorod Vladikavkaz</string>
+    <string name="stream_error">The stream could not be loaded. Try checking your internet connection</string>
+</resources>
