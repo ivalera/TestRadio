@@ -6,7 +6,11 @@ import android.os.Build;
 import android.support.graphics.drawable.AnimatedVectorDrawableCompat;
 import android.view.View;
 import android.widget.ImageButton;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
+
+import com.bumptech.glide.Glide;
 
 public class PlayButtonAnimator {
     public final static int STATE_STOPPED = 0;
@@ -20,6 +24,8 @@ public class PlayButtonAnimator {
     private ImageButton playButton;
     private ProgressBar spinner;
 
+    private LinearLayout llGif;
+
     private AnimatedVectorDrawableCompat avdPlayToStop;
     private AnimatedVectorDrawableCompat avdStopToPlay;
 
@@ -29,6 +35,11 @@ public class PlayButtonAnimator {
 
         playButton = (ImageButton) activity.findViewById(R.id.play_button);
         spinner = (ProgressBar) activity.findViewById(R.id.play_button_load_spinner);
+
+        ImageView imageView = (ImageView) activity.findViewById(R.id.view_gif);
+        Glide.with(context).load(R.drawable.equalizer).asGif().into(imageView);
+
+        llGif = (LinearLayout) activity.findViewById(R.id.ll_gif);
 
         if (Build.VERSION.SDK_INT >= 23) {
             avdPlayToStop = AnimatedVectorDrawableCompat.create(context, R.drawable.avd_play_stop);
@@ -49,6 +60,8 @@ public class PlayButtonAnimator {
             case STATE_STOPPED:
                 spinner.setVisibility(View.GONE);
 
+                llGif.setVisibility(View.INVISIBLE);
+
                 if (oldState == STATE_PLAYING && animate && Build.VERSION.SDK_INT >= 23) {
                     playButton.setImageDrawable(avdStopToPlay);
                     avdStopToPlay.start();
@@ -63,6 +76,7 @@ public class PlayButtonAnimator {
             case STATE_LOADING:
                 spinner.setVisibility(View.VISIBLE);
 
+                llGif.setVisibility(View.INVISIBLE);
                 currentState = STATE_LOADING;
                 break;
 
@@ -77,7 +91,7 @@ public class PlayButtonAnimator {
                     playButton.setImageResource(R.drawable.stop);
                 }
 
-
+                llGif.setVisibility(View.VISIBLE);
                 currentState = STATE_PLAYING;
                 break;
 
