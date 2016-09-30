@@ -1,11 +1,9 @@
 package ru.valera.testradio;
 
-import android.app.Notification;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.BitmapFactory;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.ConnectivityManager;
@@ -162,6 +160,7 @@ public class RadioStreamService extends Service {
                 }
                 else {
                     //startForeground(NOTIFICATION_ID, getNotification());
+                    showNotification();
                     message.arg1 = STATE_PLAYING;
                     player.start();
                 }
@@ -242,21 +241,6 @@ public class RadioStreamService extends Service {
         stopForeground(true);
     }
 
-    private Notification getNotification() {
-        NotificationCompat.Builder builder =
-                new NotificationCompat.Builder(this)
-                        .setLargeIcon(BitmapFactory.decodeResource(getResources(), R.drawable.ic_mic_black_36dp))
-                        .setContentTitle(getResources().getString(R.string.app_name))
-                        .setContentText(getResources().getString(R.string.app_name_long));
-
-        Intent intent = new Intent(this, MainActivity.class);
-        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-
-        PendingIntent pi = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
-
-        builder.setContentIntent(pi);
-        return builder.build();
-    }
 
     private boolean isNetworkConnected() {
         ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -267,5 +251,20 @@ public class RadioStreamService extends Service {
         RadioStreamService getService() {
             return RadioStreamService.this;
         }
+    }
+
+    private void showNotification()
+    {
+        // Create notification
+        NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this)
+                .setSmallIcon(R.drawable.ic_mic_black_36dp)
+                .setContentTitle(getString(R.string.app_name))
+                .setContentText(this.getStreamUrl()) // audio url will show in notification
+                .setContentIntent(PendingIntent.getActivity(getApplicationContext(), 0, new Intent(getApplicationContext(), MainActivity.class), 0));
+            //    .addAction(R.drawable.stop, "Stop", )
+             //   .addAction(R.drawable.play, "Pause", );
+
+        // Show notification
+        startForeground(NOTIFICATION_ID, notificationBuilder.build());
     }
 }
