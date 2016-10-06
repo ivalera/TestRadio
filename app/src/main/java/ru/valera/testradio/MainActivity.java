@@ -1,6 +1,5 @@
 package ru.valera.testradio;
 
-import android.app.PendingIntent;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -27,9 +26,6 @@ public class MainActivity extends AppCompatActivity{
         Intent intent = new Intent(this, RadioStreamService.class);
         startService(intent);
         bindService(intent, streamServiceConnection, BIND_AUTO_CREATE);
-
-        Intent switchIntent = new Intent("ru.valera.testradio.ACTION_PLAY");
-        PendingIntent pendingSwitchIntent = PendingIntent.getBroadcast(this, 100, switchIntent, 0);
 
     }
     private void setPlayButtonListeners() {
@@ -58,6 +54,7 @@ public class MainActivity extends AppCompatActivity{
         playButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+
                 if (streamService.isPlaying()) {
                     try {
                         pba.changeState(PlayButtonAnimator.STATE_STOPPED, true);
@@ -88,6 +85,7 @@ public class MainActivity extends AppCompatActivity{
                             try {
                                 switch (msg.arg1) {
                                     case RadioStreamService.STATE_PLAYING:
+                                      //  streamService.showNotification();
                                         pba.changeState(PlayButtonAnimator.STATE_PLAYING, true);
                                         break;
                                     case RadioStreamService.STATE_BUFFERING:

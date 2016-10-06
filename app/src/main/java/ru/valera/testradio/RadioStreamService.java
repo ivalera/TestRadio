@@ -1,7 +1,10 @@
 package ru.valera.testradio;
 
+import android.app.Notification;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.media.AudioManager;
@@ -13,13 +16,15 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
 import android.support.v4.app.NotificationCompat;
+import android.widget.RemoteViews;
+import android.widget.Toast;
 
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Created by Android on 26.09.2016.
+ * Created by Valera on 26.09.2016.
  */
 public class RadioStreamService extends Service {
 
@@ -37,6 +42,7 @@ public class RadioStreamService extends Service {
     private static boolean isPaused = false;
     private AudioManager.OnAudioFocusChangeListener mOnAudioFocusChangeListener;
     private Handler.Callback playCallback = null;
+
 
     public RadioStreamService() {
     }
@@ -84,6 +90,7 @@ public class RadioStreamService extends Service {
 
         return START_STICKY;
     }
+
 
     @Override
     public IBinder onBind(Intent intent) {
@@ -159,7 +166,6 @@ public class RadioStreamService extends Service {
                     message.arg1 = STATE_STOPPED;
                 }
                 else {
-                    //startForeground(NOTIFICATION_ID, getNotification());
                     showNotification();
                     message.arg1 = STATE_PLAYING;
                     player.start();
@@ -253,18 +259,73 @@ public class RadioStreamService extends Service {
         }
     }
 
-    private void showNotification()
-    {
-        // Create notification
-        NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this)
-                .setSmallIcon(R.drawable.ic_mic_black_36dp)
-                .setContentTitle(getString(R.string.app_name))
-                .setContentText(this.getStreamUrl()) // audio url will show in notification
-                .setContentIntent(PendingIntent.getActivity(getApplicationContext(), 0, new Intent(getApplicationContext(), MainActivity.class), 0));
-            //    .addAction(R.drawable.stop, "Stop", )
-             //   .addAction(R.drawable.play, "Pause", );
+    public void showNotification() {
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this);
+        Intent i = new Intent(this, MainActivity.class);
+        i.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        PendingIntent intent = PendingIntent.getActivity(this, 0, i,
+                PendingIntent.FLAG_UPDATE_CURRENT);
+        builder.setContentIntent(intent);
+        builder.setTicker(getResources().getString(R.string.custom_notification));
 
-        // Show notification
-        startForeground(NOTIFICATION_ID, notificationBuilder.build());
+        builder.setSmallIcon(R.drawable.ic_mic_black_36dp);
+
+        //builder.setAutoCancel(true);
+
+        Notification notification = builder.build();
+
+        RemoteViews contentView = new RemoteViews(context.getPackageName(), R.layout.notification);
+
+        final String text = getResources().getString(R.string.app_name_long);
+        contentView.setTextViewText(R.id.textView, text);
+
+        Intent notificationIntent = new Intent(this, RadioStreamService.class);
+        PendingIntent pendingNotificationIntent = PendingIntent.getActivity(this, 0,
+                notificationIntent, 0);
+
+        notification.contentView = contentView;
+        notification.contentIntent = pendingNotificationIntent;
+        notification.flags |= Notification.FLAG_NO_CLEAR;
+
+        Intent playIntent = new Intent(context, MediaListener.class);
+        playIntent.setAction("play");
+        PendingIntent pendingPlayIntent = PendingIntent.getBroadcast(context, 0, playIntent,0);
+        contentView.setOnClickPendingIntent(R.id.notif_play, pendingPlayIntent);
+
+        Intent pauseIntent = new Intent(context, MediaListener.class);
+        pauseIntent.setAction("pause");
+        PendingIntent pendingPauseIntent = PendingIntent.getBroadcast(context, 0, pauseIntent, 0);
+        contentView.setOnClickPendingIntent(R.id.notif_pause, pendingPauseIntent);
+
+        NotificationManager nm = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+        nm.notify(NOTIFICATION_ID, notification);
+
+
     }
+
+    public static class MediaListener extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+
+            RadioStreamService rss = new RadioStreamService();
+
+            String action = intent.getAction();
+            String actionPlay = "play";
+            String actionPause = "pause";
+
+                if (actionPlay.equals(action)) {
+                    Toast.makeText(context, "play", Toast.LENGTH_SHORT).show();
+
+                  /*  if(mediaPlayer != null) {
+                        mediaPlayer.start();
+                    }*/
+                } else if (actionPause.equals(action)) {
+                    Toast.makeText(context, "pause", Toast.LENGTH_SHORT).show();
+                    /*if(rss.isPlaying()){
+                        rss.stop();
+                    }*/
+                }
+        }
+    }
+
 }
