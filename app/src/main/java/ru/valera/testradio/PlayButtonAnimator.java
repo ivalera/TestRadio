@@ -29,6 +29,7 @@ public class PlayButtonAnimator {
     private AnimatedVectorDrawableCompat avdPlayToStop;
     private AnimatedVectorDrawableCompat avdStopToPlay;
 
+
     public PlayButtonAnimator(Context context, Activity activity) {
         this.context=context;
         this.activity=activity;

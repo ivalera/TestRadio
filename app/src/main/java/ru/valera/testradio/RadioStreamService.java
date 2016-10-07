@@ -33,7 +33,8 @@ public class RadioStreamService extends Service {
     public static final int STATE_DUCKING = 3;
     public static final int STATE_STOPPED = 4;
     private static final int NOTIFICATION_ID = 1;
-    private static final String STREAM_URL = "http://radio.alania.net:8000/radiocity";;
+    private static final String STREAM_URL = "http://radio.alania.net:8000/radiocity";
+    ;
 
     private final IBinder binder = new MyLocalBinder();
     private Context context;
@@ -42,7 +43,6 @@ public class RadioStreamService extends Service {
     private static boolean isPaused = false;
     private AudioManager.OnAudioFocusChangeListener mOnAudioFocusChangeListener;
     private Handler.Callback playCallback = null;
-
 
     public RadioStreamService() {
     }
@@ -129,7 +129,7 @@ public class RadioStreamService extends Service {
     }
 
     private String getStreamUrl() {
-        return  STREAM_URL;
+        return STREAM_URL;
     }
 
     public boolean isPlaying() {
@@ -155,7 +155,7 @@ public class RadioStreamService extends Service {
 
         final Message message = new Message();
 
-        player.setOnPreparedListener(new MediaPlayer.OnPreparedListener(){
+        player.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
             @Override
             public void onPrepared(MediaPlayer player) {
                 AudioManager audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
@@ -164,8 +164,7 @@ public class RadioStreamService extends Service {
 
                 if (result != AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
                     message.arg1 = STATE_STOPPED;
-                }
-                else {
+                } else {
                     showNotification();
                     message.arg1 = STATE_PLAYING;
                     player.start();
@@ -219,13 +218,11 @@ public class RadioStreamService extends Service {
             player.start();
             isLoading = true;
             isPaused = false;
-        }
-        else {
+        } else {
             try {
                 isLoading = true;
                 player.prepareAsync();
-            }
-            catch (IllegalStateException e) {
+            } catch (IllegalStateException e) {
                 isLoading = false;
                 message.arg1 = STATE_STOPPED;
                 callback.handleMessage(message);
@@ -276,10 +273,10 @@ public class RadioStreamService extends Service {
 
         RemoteViews contentView = new RemoteViews(context.getPackageName(), R.layout.notification);
 
-        final String text = getResources().getString(R.string.app_name_long);
+        final String text = getResources().getString(R.string.radio_text);
         contentView.setTextViewText(R.id.textView, text);
 
-        Intent notificationIntent = new Intent(this, RadioStreamService.class);
+        Intent notificationIntent = new Intent(this, MainActivity.class);
         PendingIntent pendingNotificationIntent = PendingIntent.getActivity(this, 0,
                 notificationIntent, 0);
 
@@ -289,7 +286,7 @@ public class RadioStreamService extends Service {
 
         Intent playIntent = new Intent(context, MediaListener.class);
         playIntent.setAction("play");
-        PendingIntent pendingPlayIntent = PendingIntent.getBroadcast(context, 0, playIntent,0);
+        PendingIntent pendingPlayIntent = PendingIntent.getBroadcast(context, 0, playIntent, 0);
         contentView.setOnClickPendingIntent(R.id.notif_play, pendingPlayIntent);
 
         Intent pauseIntent = new Intent(context, MediaListener.class);
@@ -297,34 +294,52 @@ public class RadioStreamService extends Service {
         PendingIntent pendingPauseIntent = PendingIntent.getBroadcast(context, 0, pauseIntent, 0);
         contentView.setOnClickPendingIntent(R.id.notif_pause, pendingPauseIntent);
 
+        Intent closeIntent = new Intent(context, MediaListener.class);
+        closeIntent.setAction("close");
+        PendingIntent pendingCloseIntent = PendingIntent.getBroadcast(context, 0, closeIntent, 0);
+        contentView.setOnClickPendingIntent(R.id.notif_close, pendingCloseIntent);
+
         NotificationManager nm = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
         nm.notify(NOTIFICATION_ID, notification);
 
 
     }
 
+
+    public static void cancel(Context context) {
+        NotificationManager notificationManager =
+                (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+        notificationManager.cancel(NOTIFICATION_ID);
+    }
+
     public static class MediaListener extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
 
-            RadioStreamService rss = new RadioStreamService();
+            RadioStreamService streamService = new RadioStreamService();
 
             String action = intent.getAction();
             String actionPlay = "play";
             String actionPause = "pause";
+            String actionClose = "close";
 
-                if (actionPlay.equals(action)) {
-                    Toast.makeText(context, "play", Toast.LENGTH_SHORT).show();
+            MediaPlayer player = streamService.getPlayer();
 
-                  /*  if(mediaPlayer != null) {
-                        mediaPlayer.start();
-                    }*/
-                } else if (actionPause.equals(action)) {
-                    Toast.makeText(context, "pause", Toast.LENGTH_SHORT).show();
-                    /*if(rss.isPlaying()){
-                        rss.stop();
-                    }*/
+            if (actionPlay.equals(action)) {
+                Toast.makeText(context, "play", Toast.LENGTH_SHORT).show();
+
+                player.start();
+
+            } else if (actionPause.equals(action)) {
+                Toast.makeText(context, "pause", Toast.LENGTH_SHORT).show();
+
+                player.pause();
+            } else if (actionClose.equals(action)) {
+                RadioStreamService.cancel(context);
+                if (player.isPlaying()) {
+                    player.reset();
                 }
+            }
         }
     }
 

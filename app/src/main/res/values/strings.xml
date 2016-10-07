@@ -1,13 +1,9 @@
 <resources>
     <string name="app_name">Радио Город</string>
-    <string name="app_name_long">Радио Город Владикавказ</string>
-    <string name="stream_error">The stream could not be loaded. Try checking your internet connection</string>
-    <string name="play">Play</string>
-    <string name="pause">Pause</string>
-    <string name="close">Close</string>
-
+    <string name="stream_error">Поток не может быть загружен. Попробуйте проверить подключение к Интернету.</string>
 
     <string name="custom_notification">Сейчас играет Радио Город</string>
+    <string name="radio_text">Радио\n Радио Город Владикавказ</string>
 
 
 </resources>
