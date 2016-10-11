@@ -13,10 +13,17 @@ import android.view.View;
 import android.widget.ImageButton;
 import android.widget.Toast;
 
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
+
+import ru.valera.testradio.events.CurrentButtonPlayStopState;
+
 public class MainActivity extends AppCompatActivity{
 
     private RadioStreamService streamService;
     private boolean streamServiceIsBound = false;
+
+    private PlayButtonAnimator pba;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -27,10 +34,12 @@ public class MainActivity extends AppCompatActivity{
         startService(intent);
         bindService(intent, streamServiceConnection, BIND_AUTO_CREATE);
 
+        EventBus.getDefault().register(this);
+
     }
     private void setPlayButtonListeners() {
         final Context context = getApplicationContext();
-        final PlayButtonAnimator pba = new PlayButtonAnimator(MainActivity.this, this);
+        pba = new PlayButtonAnimator(MainActivity.this, this);
         final ImageButton playButton = (ImageButton) findViewById(R.id.play_button);
 
         if (playButton == null) {
@@ -130,12 +139,20 @@ public class MainActivity extends AppCompatActivity{
         });
     }
 
+    @Subscribe
+    public void onEvent(CurrentButtonPlayStopState event) throws Exception {
+        pba.changeState(PlayButtonAnimator.STATE_STOPPED, true);
+        streamService.stop();
+    }
+
     @Override
     protected void onDestroy() {
         if (streamServiceIsBound) {
             unbindService(streamServiceConnection);
         }
         super.onDestroy();
+
+        EventBus.getDefault().unregister(this);
     }
 
     private ServiceConnection streamServiceConnection = new ServiceConnection() {

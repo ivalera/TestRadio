@@ -19,9 +19,13 @@ import android.support.v4.app.NotificationCompat;
 import android.widget.RemoteViews;
 import android.widget.Toast;
 
+import org.greenrobot.eventbus.EventBus;
+
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+
+import ru.valera.testradio.events.CurrentButtonPlayStopState;
 
 /**
  * Created by Valera on 26.09.2016.
@@ -242,6 +246,7 @@ public class RadioStreamService extends Service {
         isPaused = false;
         stopSelf();
         stopForeground(true);
+        cancelNotification(context);
     }
 
 
@@ -249,6 +254,12 @@ public class RadioStreamService extends Service {
         ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
         return cm.getActiveNetworkInfo() != null;
     }
+
+    /**
+     * Binder that allows local classes to communicate with the service.
+     *
+     * @author johannes
+     */
 
     public class MyLocalBinder extends Binder {
         RadioStreamService getService() {
@@ -306,7 +317,7 @@ public class RadioStreamService extends Service {
     }
 
 
-    public static void cancel(Context context) {
+    public static void cancelNotification(Context context) {
         NotificationManager notificationManager =
                 (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
         notificationManager.cancel(NOTIFICATION_ID);
@@ -335,12 +346,10 @@ public class RadioStreamService extends Service {
 
                 player.pause();
             } else if (actionClose.equals(action)) {
-                RadioStreamService.cancel(context);
-                if (player.isPlaying()) {
-                    player.reset();
-                }
+                RadioStreamService.cancelNotification(context);
+                EventBus.getDefault().post(new CurrentButtonPlayStopState());
             }
         }
     }
-
 }
+
